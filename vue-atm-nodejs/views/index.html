@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <script type="text/javascript" src="/vue.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+</head>
+<style>
+    #app{
+    width: 600px;
+margin: 0 auto;
+}
+</style>
+
+<body>
+   
+<div id="app">
+    <el-tabs v-model="activeName" stretch v-if="showLogin">
+        <el-tab-pane label="注册" name="reg">
+            <el-form ref="regUser" :model="regUser" label-width="100px" :rules="resRules">
+                <el-form-item label="用户名" prop="username">
+                    <el-input type="text" v-model="regUser.username"></el-input>
+                </el-form-item>
+                <el-form-item label="登录密码" prop="passwd">
+                    <el-input type="password" v-model="regUser.passwd"></el-input>
+                </el-form-item>
+                <el-form-item label="手机号码" prop="phone">
+                    <el-input type="number" v-model="regUser.phone"></el-input>
+                </el-form-item>
+                <el-form-item label="身份证" prop="idCard">
+                    <el-input type="text" v-model="regUser.idCard"></el-input>
+                </el-form-item>
+                <el-form-item label="真实姓名" prop="name">
+                    <el-input type="text" v-model="regUser.name"></el-input>
+                </el-form-item>
+                <el-form-item label="支付密码" prop="transactionPasswd">
+                    <el-input type="password" v-model="regUser.transactionPasswd"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="submitReg">注册</el-button>
+                </el-form-item>
+            </el-form>
+        </el-tab-pane>
+        <el-tab-pane label="登录" name="loginUser">
+            <el-form :model="loginUser" status-icon :rules="rules" ref="loginUser" label-width="100px"
+                        class="demo-ruleForm">
+                <el-form-item label="用户名" prop="username">
+                    <el-input type="text" v-model="loginUser.username" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="密码" prop="passwd">
+                    <el-input type="password" v-model="loginUser.passwd" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="submitLogin">登录</el-button>
+                </el-form-item>
+            </el-form>
+        </el-tab-pane>
+    </el-tabs>
+    <el-tabs v-model="active" stretch v-if="!showLogin">
+        <el-tab-pane label="个人服务" name="person">
+            <el-collapse v-model="userActive" accordion>
+                <el-collapse-item title="个人信息" name="1">
+                    <div>ID：{{user.id}}</div>
+                    <div>用户名：{{user.username}}</div>
+                    <div>登录密码：{{user.passwd}}</div>
+                    <div>手机号码：{{user.phone}}</div>
+                    <div>身份证号：{{user.idCard}}</div>
+                    <div>姓名：{{user.name}}</div>
+                    <div>交易密码：{{user.transactionPasswd}}</div>
+                </el-collapse-item>
+                <el-collapse-item title="余额" name="2">
+                    <div>当前余额：{{user.balance}}</div>
+                </el-collapse-item>
+            </el-collapse>
+        </el-tab-pane>
+        <el-tab-pane label="金额操作" name="money">
+            <el-popover
+                    placement="right"
+                    v-model="addBalanceVisible"
+                    width="400"
+                    trigger="manual">
+                    <el-input type="number" v-model="balanceInput" placeholder="请输入存款金额" min="100" step="100"></el-input>
+                    <el-button @click="submitAddBalance">确定</el-button>
+                <el-button slot="reference" @click="addBalanceVisible = !addBalanceVisible">
+                    <svg t="1571447187699" class="icon" viewBox="0 0 1064 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5875" width="13" height="13"><path d="M511.534545 1019.100478C232.261818 1019.100478 1.984306 788.822967 1.984306 509.550239S232.261818 0 511.534545 0 1021.084785 230.277512 1021.084785 509.550239 790.807273 1019.100478 511.534545 1019.100478z m0-979.904306C251.859904 39.196172 41.180478 249.875598 41.180478 509.550239s210.679426 470.354067 470.354067 470.354067 470.354067-210.679426 470.354067-470.354067S771.209187 39.196172 511.534545 39.196172z" fill="#666666" p-id="5876"></path><path d="M771.209187 328.267943c4.899522 4.899522 4.899522 4.899522 4.899521 9.799043 0 0 0 4.899522-9.799043 4.899521h-293.971292c-34.296651 63.69378-63.69378 107.789474-88.191387 146.985646v269.473684c0 9.799043 0 9.799043-14.698565 14.698565-4.899522 4.899522-4.899522 4.899522-9.799043 4.899521s-4.899522-4.899522-4.899522-14.698564v-4.899522-230.277512c-34.296651 39.196172-63.69378 68.593301-107.789473 102.889953l-4.899522-4.899522C315.553684 563.444976 389.046507 460.555024 447.840766 338.066986H315.553684c-14.698565 0-29.397129 0-39.196172 4.899521l-14.698565-19.598086h191.08134c14.698565-29.397129 24.497608-58.794258 34.296651-93.090909l39.196172 14.698565c4.899522 0 9.799043 4.899522 9.799043 4.899521l-14.698564 14.698565c-9.799043 4.899522-14.698565 4.899522-24.497608 24.497607-4.899522 9.799043-9.799043 24.497608-19.598086 39.196173h230.277512l24.497607-34.296651 39.196173 34.296651z m4.899521 244.976076c4.899522 4.899522 4.899522 4.899522 4.899522 9.799043 0 0 0 4.899522-9.799043 4.899522h-156.784689v146.985646c0 24.497608 0 29.397129-48.995216 48.995215h-4.899521s-4.899522 0-4.899522-4.899522c-4.899522-19.598086-14.698565-29.397129-68.593301-39.196172V730.028708c34.296651 4.899522 53.894737 9.799043 68.593301 9.799043 19.598086 0 24.497608-4.899522 24.497608-19.598086V583.043062H477.237895c-14.698565 0-29.397129 0-39.196173 4.899522l-14.698564-19.598086h171.483253V485.052632l24.497608 14.698564 58.794259-73.492823H511.534545c-14.698565 0-29.397129 0-39.196172 4.899522l-19.598086-19.598086h220.478469l19.598086-19.598087 34.296651 29.39713 4.899521 4.899521h-4.899521c-19.598086 0-34.296651 4.899522-97.990431 73.492823l14.698565 4.899522-19.598086 9.799043v48.995215h97.99043l24.497608-34.296651 29.397129 44.095694z" fill="#666666" p-id="5877"></path></svg>
+                    存款
+                </el-button>
+            </el-popover>
+            <el-popover
+                    placement="right"
+                    v-model="reduceBalanceVisible"
+                    width="400"
+                    trigger="manual">
+                <el-input type="number" v-model="balanceInput" placeholder="请输入取款金额" min="100" step="100"></el-input>
+                <el-input type="password" v-model="passwdInput" placeholder="请输入交易密码" min="100" step="100"></el-input>
+                <el-button @click="submitReduceBalance">确定</el-button>
+                <el-button slot="reference" @click="reduceBalanceVisible = !reduceBalanceVisible">
+                    <svg t="1571447140226" class="icon" viewBox="0 0 1064 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5123" width="13" height="13"><path d="M511.534545 1019.100478C232.261818 1019.100478 1.984306 788.822967 1.984306 509.550239S232.261818 0 511.534545 0 1021.084785 230.277512 1021.084785 509.550239 790.807273 1019.100478 511.534545 1019.100478z m0-979.904306C251.859904 39.196172 41.180478 249.875598 41.180478 509.550239s210.679426 470.354067 470.354067 470.354067 470.354067-210.679426 470.354067-470.354067S771.209187 39.196172 511.534545 39.196172z" fill="#666666" p-id="5124"></path><path d="M575.228325 279.272727l4.899522 4.899522s0 4.899522-4.899522 4.899521h-97.99043v303.770335l93.090909-24.497607 4.899521 9.799043-93.090909 29.397129V681.033493c0 14.698565 4.899522 68.593301 4.899522 78.392344 0 9.799043 0 9.799043-14.698565 14.698565-14.698565 4.899522-19.598086 4.899522-19.598086 4.899521-4.899522 0-4.899522-4.899522-4.899521-14.698564v-151.885168l-112.688996 34.296651c-19.598086 4.899522-53.894737 19.598086-63.69378 29.397129h-9.799043l-29.397129-29.397129 78.392345-14.698564V289.07177H291.056077c-14.698565 0-29.397129 0-39.196173 4.899522l-14.698564-24.497608H521.333589l19.598086-29.397129 34.29665 39.196172zM447.840766 382.162679V289.07177H340.051292v97.990431h107.789474z m0 117.588517V396.861244H340.051292v102.889952h107.789474z m0 97.990431V509.550239H340.051292v117.588517l107.789474-29.397129z m342.966507 117.588517c-34.296651 0-48.995215 4.899522-53.894737 14.698564H732.013014c-4.899522 0-68.593301-48.995215-102.889952-97.99043-34.296651 48.995215-78.392344 88.191388-142.086124 132.287081l-4.899522-9.799043c53.894737-39.196172 97.990431-83.291866 127.38756-142.086125-39.196172-63.69378-58.794258-142.086124-68.593301-259.674641-9.799043 0-24.497608 4.899522-34.296651 4.899522l-14.698565-24.497608H683.017799l19.598086-29.397129 39.196172 34.296651 4.899522 4.899521s0 4.899522-4.899522 4.899522l-19.598086 9.799043c-24.497608 112.688995-48.995215 186.181818-83.291866 249.875598 34.296651 48.995215 83.291866 78.392344 146.985646 97.99043v9.799044z m-235.177034-367.464115c14.698565 102.889952 34.296651 181.282297 68.593302 235.177033 29.397129-58.794258 53.894737-137.186603 63.69378-235.177033h-132.287082z" fill="#666666" p-id="5125"></path></svg>
+                    取款
+                </el-button>
+            </el-popover>
+            <el-button @click="transferVisible = true">
+                <svg t="1571446825062" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2236" width="13" height="13"><path d="M506.88 151.552c198.656 0 360.448 161.792 360.448 360.448s-161.792 360.448-360.448 360.448-360.448-161.792-360.448-360.448S308.224 151.552 506.88 151.552m0-51.2c-227.328 0-411.648 184.32-411.648 411.648s184.32 411.648 411.648 411.648 411.648-184.32 411.648-411.648-184.32-411.648-411.648-411.648z" p-id="2237"></path><path d="M711.68 442.88H302.08c-14.336 0-25.6-11.264-25.6-25.6 0-13.824 11.264-25.6 25.6-25.6h409.6c14.336 0 25.6 11.264 25.6 25.6 0 13.824-11.264 25.6-25.6 25.6z" p-id="2238"></path><path d="M693.76 435.2l-87.04-87.04c-9.728-9.728-9.728-26.112 0-36.352 9.728-9.728 26.112-9.728 36.352 0l87.04 87.04c9.728 9.728 9.728 26.112 0 36.352-10.24 10.24-26.624 10.24-36.352 0z" p-id="2239"></path><path d="M302.08 581.12h409.6c14.336 0 25.6 11.264 25.6 25.6 0 13.824-11.264 25.6-25.6 25.6H302.08c-14.336 0-25.6-11.264-25.6-25.6 0-13.824 11.264-25.6 25.6-25.6z" p-id="2240"></path><path d="M320 588.8l87.04 87.04c9.728 9.728 9.728 26.112 0 36.352-9.728 9.728-26.112 9.728-36.352 0l-87.04-87.04c-9.728-9.728-9.728-26.112 0-36.352 10.24-10.24 26.624-10.24 36.352 0z" p-id="2241"></path></svg>
+                转账
+            </el-button>
+            <el-dialog title="转账" :visible.sync="transferVisible">
+                <el-form :model="transferUser" label-width="140px" :rules="transferRules">
+                    <el-form-item label="转账金额" prop="balance">
+                        <el-input type="number" v-model="transferUser.balance" autocomplete="off"></el-input>
+                    </el-form-item>
+                    <el-form-item label="转账用户手机号" prop="phone">
+                        <el-input type="number" v-model="transferUser.phone" autocomplete="off"></el-input>
+                    </el-form-item>
+                    <el-form-item label="转账用户姓名" prop="name">
+                        <el-input type="text" v-model="transferUser.name" autocomplete="off"></el-input>
+                    </el-form-item>
+                    <el-form-item label="交易密码" prop="transactionPasswd">
+                        <el-input type="password" v-model="transferUser.transactionPasswd" autocomplete="off"></el-input>
+                    </el-form-item>
+                </el-form>
+                <div slot="footer" class="dialog-footer">
+                    <el-button @click="transferVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="submitTransfer">确 定</el-button>
+                </div>
+            </el-dialog>
+        </el-tab-pane>
+        <el-tab-pane label="退出操作" name="quit">
+            <el-button @click="close">重新登录</el-button>
+        </el-tab-pane>
+    </el-tabs>
+
+
+</div>
+  <script>
+    axios.defaults.baseURL = "http://122.51.129.115:3000";
+    new Vue({
+        el: "#app",
+        data: {
+            activeName: 'reg',
+            passwdInput: '',
+            userActive: '',
+            showLogin: true,
+            active: 'person',
+            balanceInput: '',
+            addBalanceVisible: false,
+            reduceBalanceVisible: false,
+            transferVisible: false,
+            loginUser: {
+                username: "",
+                passwd: ""
+            },
+            user: {
+                id: '',
+                username: "",
+                passwd: "",
+                phone: "",
+                idCard: "",
+                name: "",
+                transactionPasswd: "",
+                balance: ''
+            },
+            regUser: {
+                username: "",
+                passwd: "",
+                phone: "",
+                idCard: "",
+                name: "",
+                transactionPasswd: ""
+            },
+            transferUser: {
+                id: '',
+                balance: '',
+                phone: '',
+                name: '',
+                transactionPasswd: ''
+            }
+        },
+        created() {
+            if (localStorage.getItem("USER")) {
+                let id = localStorage.getItem("USER");
+                this.getUserInfo(id);
+                this.showLogin = false;
+            }
+        },
+        computed: {
+            rules() {
+                var validatePasswd = (rule, value, callback) => {
+                    let reg = /^[0-9]{6}$/;
+                    if (!reg.test(value)) {
+                        callback(new Error("登录密码只能为6位数字"));
+                    } else {
+                        callback();
+                    }
+                };
+                return {
+                    username: [
+                        {required: true, message: '用户名不能为空', trigger: 'blur'}
+                    ],
+                    passwd: [
+                        {required: true, message: '密码不能为空', trigger: 'blur'},
+                        {validator: validatePasswd, trigger: 'blur'},
+                    ]
+                }
+            },
+            resRules() {
+                var validatePasswd = (rule, value, callback) => {
+                    let reg = /^[0-9]{6}$/;
+                    if (!reg.test(value)) {
+                        callback(new Error("登录密码只能为6位数字"));
+                    } else {
+                        callback();
+                    }
+                };
+                var validatetransactionPasswd = (rule, value, callback) => {
+                    let reg = /^[0-9]{6}$/;
+                    if (!reg.test(value)) {
+                        callback(new Error("登录密码只能为6位数字"));
+                    } else {
+                        callback();
+                    }
+                };
+                var validatePhone = (rele, value, callback) => {
+                    let reg = /^1[3456789]\d{9}$/;
+                    if (!reg.test(value)) {
+                        callback(new Error("手机号不符合规则"));
+                    } else {
+                        callback();
+                    }
+                }
+                var validateIdCard = (rele, value, callback) => {
+                    let reg = /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/;
+                    var factor = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+                    var parity = [1, 0, 'X', 9, 8, 7, 6, 5, 4, 3, 2];
+                    var code = value.substring(17);
+                    if (reg.test(value)) {
+                        var sum = 0;
+                        for (var i = 0; i < 17; i++) {
+                            sum += value[i] * factor[i];
+                        }
+                        if (parity[sum % 11] == code.toUpperCase()) {
+                            callback();
+                        }
+                    } else {
+                        callback(new Error("身份证号不符合规则"));
+                    }
+                }
+                return {
+                    username: [
+                        {required: true, message: '用户名不能为空', trigger: 'blur'}
+                    ],
+                    passwd: [
+                        {required: true, message: '登录密码不能为空', trigger: 'blur'},
+                        {validator: validatePasswd, trigger: 'blur'}
+                    ],
+                    phone: [
+                        {required: true, message: '手机号不能为空', trigger: 'blur'},
+                        {validator: validatePhone, trigger: 'blur'}
+                    ],
+                    idCard: [
+                        {required: true, message: '身份证号不能为空', trigger: 'blur'},
+                        {validator: validateIdCard, trigger: 'blur'}
+                    ],
+                    name: [
+                        {required: true, message: '真实姓名不能为空', trigger: 'blur'}
+                    ],
+                    transactionPasswd: [
+                        {required: true, message: '登录密码不能为空', trigger: 'blur'},
+                        {validator: validatetransactionPasswd, trigger: 'blur'}
+                    ],
+                }
+            },
+            transferRules() {
+                var validateBalance = (rule,value,callback) => {
+                    if(value < 100 ){
+                        callback(new Error("转账金额不能小于100"));
+                    }else if(value % 100 != 0) {
+                        callback(new Error("只能转账整百金额"));
+                    }else{
+                        callback();
+                    }
+                }
+                var validateTransactionPasswd = (rule, value, callback) => {
+                    let reg = /^[0-9]{6}$/;
+                    if (!reg.test(value)) {
+                        callback(new Error("交易密码只能为6位数字"));
+                    } else {
+                        callback();
+                    }
+                };
+                var validatePhone = (rele, value, callback) => {
+                    let reg = /^1[3456789]\d{9}$/;
+                    if (!reg.test(value)) {
+                        callback(new Error("手机号不符合规则"));
+                    } else {
+                        callback();
+                    }
+                }
+                return {
+                    balance: [
+                        {required: true, message: '转账金额不能为空', trigger: 'blur'},
+                        {validator: validateBalance, trigger: 'blur'}
+                    ],
+                    name: [
+                        {required: true, message: '转账用户姓名不能为空', trigger: 'blur'}
+                    ],
+                    phone: [
+                        {required: true, message: '转账用户手机号不能为空', trigger: 'blur'},
+                        {validator: validatePhone, trigger: 'blur'}
+                    ],
+                    transactionPasswd: [
+                        {required: true, message: '交易密码不能为空', trigger: 'blur'},
+                        {validator: validateTransactionPasswd, trigger: 'blur'}
+                    ]
+                }
+            }
+        },
+        methods: {
+            submitLogin() {
+                if (this.loginUser.username == '' || this.loginUser.passwd == '') {
+                    this.$message({
+                        showClose: true,
+                        message: '必填项不能为空',
+                        type: 'warning'
+                    })
+                    return;
+                }
+                console.info(this.loginUser)
+                axios({
+                    method: 'POST',
+                    url: '/user/login',
+                    data: {
+                        username: this.loginUser.username,
+                        passwd: this.loginUser.passwd
+                    }
+                }).then(res => {
+                    console.info(res)
+                    if (res.data.code == 0) {
+                        this.$message({
+                            showClose: true,
+                            message: '登录成功',
+                            type: 'success'
+                        })
+                        this.loginUser = {
+                            username: "",
+                            passwd: ""
+                        }
+                        this.user = res.data.data;
+                        localStorage.setItem("USER", this.user.id);
+                        this.showLogin = false;
+                    }else if(res.data.code == 1001){
+                        this.$message({
+                            showClose: true,
+                            message: '用户名/密码输入错误',
+                            type: 'success'
+                        })
+                    }
+                }).catch(error => {
+                    console.info(error)
+                })
+            },
+            submitReg() {
+                if (this.regUser.username == '' || this.regUser.passwd == '' || this.regUser.phone == '' || this.regUser.idCard == '' || this.regUser.name == '' || this.regUser.transactionPasswd == '') {
+                    this.$message({
+                        showClose: true,
+                        message: '必填项不能为空',
+                        type: 'warning'
+                    })
+                    return;
+                }
+                axios({
+                    method: 'POST',
+                    url: '/user/reg',
+                    data: {
+                        username: this.regUser.username,
+                        passwd: this.regUser.passwd,
+                        phone: this.regUser.phone,
+                        idCard: this.regUser.idCard,
+                        name: this.regUser.name,
+                        transactionPasswd: this.regUser.transactionPasswd,
+                    }
+                }).then(res => {
+                    console.info(res)
+                    if (res.data.code == 0) {
+                        this.$message({
+                            showClose: true,
+                            message: '注册成功',
+                            type: 'success'
+                        })
+                        this.regUser = {
+                            username: "",
+                            passwd: "",
+                            phone: "",
+                            idCard: "",
+                            name: "",
+                            transactionPasswd: ""
+                        }
+                    }else if(res.data.code == 1003){
+                        this.$message({
+                            showClose: true,
+                            message: '注册失败，该手机号已被注册',
+                            type: 'success'
+                        })
+                    }else if(res.data.code == 1004){
+                        this.$message({
+                            showClose: true,
+                            message: '注册失败，该身份证已被注册',
+                            type: 'success'
+                        })
+                    }else if(res.data.code == 1009){
+                        this.$message({
+                            showClose: true,
+                            message: '注册失败，该用户名已被注册',
+                            type: 'success'
+                        })
+                    }else if(res.data.code == 1010){
+                        this.$message({
+                            showClose: true,
+                            message: '注册失败，支付密码不能与交易密码一致',
+                            type: 'success'
+                        })
+                    }
+                }).catch(error => {
+                    console.info(error)
+                })
+            },
+            submitAddBalance(){
+                if(this.balanceInput < 100 ){
+                    this.$notify({
+                        type: 'warning',
+                        message: '存款金额不能小于100'
+                    });
+                    return;
+                }else if(this.balanceInput % 100 != 0) {
+                    this.$notify({
+                        type: 'warning',
+                        message: '只能存入整百金额'
+                    });
+                }
+                console.info(this.user.id)
+                console.info(this.balanceInput)
+                axios({
+                    method: 'PATCH',
+                    url: '/user/deposit?id='+this.user.id+"&volume="+this.balanceInput,
+                }).then(res => {
+                    console.info(res)
+                    if (res.data.code == 0) {
+                        this.$message({
+                            showClose: true,
+                            message: '存款成功，当前余额为：'+res.data.data,
+                            type: 'success'
+                        })
+                        this.balanceInput = '';
+                        this.user.balance = res.data.data;
+                        this.addBalanceVisible = false;
+                    }
+                }).catch(error => {
+                    console.info(error)
+                })
+            },
+            submitReduceBalance(){
+                if(this.balanceInput < 100 ){
+                    this.$notify({
+                        type: 'warning',
+                        message: '取款金额不能小于100'
+                    });
+                    return;
+                }else if(this.balanceInput % 100 != 0) {
+                    this.$notify({
+                        type: 'warning',
+                        message: '只能取出整百金额'
+                    });
+                    return;
+                }else if(this.passwdInput.trim() == ''){
+                    this.$notify({
+                        type: 'warning',
+                        message: '交易密码不能为空'
+                    });
+                    return;
+                }
+
+                axios({
+                    method: 'PATCH',
+                    url: '/user/withdrawal?id='+this.user.id+"&volume="+this.balanceInput+"&transactionPasswd="+this.passwdInput,
+                }).then(res => {
+                    console.info(res)
+                    if (res.data.code == 0) {
+                        this.$message({
+                            showClose: true,
+                            message: '取款成功，当前余额为：'+res.data.data,
+                            type: 'success'
+                        })
+                        this.balanceInput = '';
+                        this.user.balance = res.data.data;
+                        this.reduceBalanceVisible = false;
+                    }else if(res.data.code == 1002){
+                        this.$message.error({
+                            showClose: true,
+                            message: '取款失败，余额不足',
+                        })
+                    }else if(res.data.code == 1011){
+                        this.$message.error({
+                            showClose: true,
+                            message: '取款失败，交易密码输入错误',
+                        })
+                    }
+                }).catch(error => {
+                    console.info(error)
+                })
+            },
+            close(){
+                localStorage.removeItem("USER");
+                this.showLogin = true;
+            },
+            submitTransfer(){
+                if(this.transferUser.balance == '' || this.transferUser.name == '' || this.transferUser.phone == '' || this.transferUser.transactionPasswd == ''){
+                    this.$message({
+                        showClose: true,
+                        message: '必填项不能为空',
+                        type: 'warning'
+                    })
+                    return;
+                }
+                if(this.transferUser.phone == this.user.phone){
+                    this.$message({
+                        showClose: true,
+                        message: '不能转账给自己',
+                        type: 'warning'
+                    })
+                    return;
+                }
+                this.transferUser.id = this.user.id;
+                axios({
+                    method: 'PUT',
+                    url: '/user',
+                    data: {
+                        id:this.transferUser.id,
+                        balance:this.transferUser.balance,
+                        phone:this.transferUser.phone,
+                        name:this.transferUser.name,
+                        transactionPasswd:this.transferUser.transactionPasswd
+                    }
+                }).then(res =>{
+                    console.info(res.data)
+                    if (res.data.code == 0) {
+                        this.$message({
+                            showClose: true,
+                            message: '转账成功，当前余额为：'+res.data.data,
+                            type: 'success'
+                        })
+                        this.transferUser = {
+                                id: '',
+                                balance: '',
+                                phone: '',
+                                name: '',
+                                transactionPasswd: ''
+                        }
+                        this.user.balance = res.data.data;
+                    }else if(res.data.code == 1002){
+                        this.$message.error({
+                            showClose: true,
+                            message: '转账失败，余额不足',
+                        })
+                    }else if(res.data.code == 1005){
+                        this.$message.error({
+                            showClose: true,
+                            message: '转账失败，交易密码输入错误',
+                        })
+                    }else if(res.data.code == 1006){
+                        this.$message.error({
+                            showClose: true,
+                            message: '转账失败，查找不到该用户',
+                        })
+                    }else if(res.data.code == 1007){
+                        this.$message.error({
+                            showClose: true,
+                            message: '转账失败，账户名输入错误',
+                        })
+                    }else if(res.data.code == 1008){
+                        this.$message.error({
+                            showClose: true,
+                            message: '转账失败，不能转账给自己',
+                        })
+                    }
+                }).catch(error => {
+                    console.info(error)
+                })
+                this.transferVisible = false;
+            },
+            getUserInfo(id){
+                axios.get("/user?id="+id).then(res => {this.user = res.data.data;window.console.info(this.user);});
+            }
+        }
+    })
+  </script>
+</body>
+
+</html>
